@@ -1,0 +1,62 @@
+
+\begin{spec}
+
+\begin{schema}{Functions}
+	bool : \{ 0, 1 \} \\
+	digits : \{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 \} \\
+	intZ : \num \\
+	null : Char \\
+	toN : digits \fun \nat \\
+	toD : \nat \pfun digits
+\where
+	\forall ch : digits @ toN (ch) = ascii\_of (ch) - 48 \\
+	\forall x : \nat @ toD (x) = \zif x \in 0 \upto 9 \zthen \\
+\t1	ascii\_char (x + 48) \zelse null
+\end{schema}
+
+\begin{schema}{Half}
+	half : intZ \fun intZ \\
+	half0 : \seq digits \cross bool \fun \seq digits \cross \\
+\t1	bool \\
+	half1 : digits \cross bool \fun digits \cross bool
+\where
+	\forall n : intZ @ half (n) = \zif head n = minus \zthen \\
+\t1	\langle minus \rangle \cat first (half0 (tail n, 0)) \\
+\t1	\zelse (\zif head n = plus \zthen first (half0 (tail n, \\
+\t1	0)) \zelse first (half0 (n, 0))) \\
+	\forall n : \seq digits; a : bool @ \zlet r==half1 (head \\
+\t1	n, a) @ half0 (n, a) = \zif \# n > 0 \zthen (\langle \\
+\t1	first r \rangle \cat first (half0 (tail n, second r)), \\
+\t1	0) \zelse (\langle \rangle, 0) \\
+	\forall ch : digits; a : bool @ \zlet i==toN (ch) + a * 10 \\
+\t1	@ half1 (ch, a) = (toD (i \div 2), i \mod 2)
+\end{schema}
+
+\begin{schema}{Odd}
+	odd : intZ \fun bool
+\where
+	\forall n : intZ @ odd (n) = toN (last n) \mod 2
+\end{schema}
+
+\begin{schema}{Mult\_acc3}
+	intZ : \num \\
+	mult\_acc3 : intZ \cross intZ \cross intZ \fun intZ
+\where
+	\forall r, n, a : intZ @ \zlet n2==half (diff (n, one)); \\
+\t1	a2==a + a @ mult\_acc3 (r, n, a) = \zif odd (n) = 1 \\
+\t1	\zthen (\zif (cmp (n, one) = 1) \zthen r + a \zelse \\
+\t1	mult\_acc3 (r + a, n2, a2)) \zelse mult\_acc3 (r, n2, \\
+\t1	a2)
+\end{schema}
+
+\begin{schema}{Multiply}
+	intZ : \num \\
+	multiply3 : intZ \cross intZ \fun intZ
+\where
+	\forall n, a : intZ @ multiply3 (n, a) = \zif (\lnot odd \\
+\t1	(n) = 1) \zthen multiply3 (half (n), a + a) \zelse \\
+\t1	(\zif (cmp (n, one) = 1) \zthen a \zelse mult\_acc3 (a, \\
+\t1	half (diff (n, one)), a + a))
+\end{schema}
+
+\end{spec}

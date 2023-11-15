@@ -1,0 +1,63 @@
+
+	spec
+	schema Functions
+		bool : {0,1};
+		digits : {0,1,2,3,4,5,6,7,8,9};
+		intZ : Z;	
+		null : Char;
+		toN : digits fun N;
+		toD : N pfun digits; 	
+	where
+		forall ch : digits @ toN(ch) = ascii_of(ch)-48;
+		forall x : N @
+		toD(x) = if x in 0..9 then
+		ascii_char(x+48) else null
+	end schema
+	schema Half		
+		half : intZ fun intZ;
+		half0 : seq digits & bool fun seq digits & bool;
+		half1 : digits & bool fun digits & bool;
+	where
+		forall n : intZ @
+		half(n)=
+		if head n = minus then <<minus>> ^ first(half0(tail n, 0))
+		else if head n = plus then first (half0(tail n, 0))
+		else first (half0(n,0));
+		forall n : seq digits; a : bool @ 
+		let r == half1(head n, a)@ 
+		half0(n,a)= if #n>0 then (<<first r>>^first(half0(tail n, second r)),0)
+		else (<<>>,0);
+		forall ch: digits; a:bool @
+		let i == toN(ch) + a*10 @
+		half1(ch,a) = (toD(i div 2), i mod 2);
+	end schema
+	schema Odd	
+		odd : intZ fun bool;	
+	where
+		forall n : intZ @ odd(n)=toN(last n) mod 2;
+	end schema
+	schema Mult_acc3	
+		intZ : Z;	
+		mult_acc3 : intZ & intZ & intZ fun intZ;
+	where
+		forall r, n, a : intZ @
+		let n2 == half(diff(n,one)); a2 == a+a @
+		mult_acc3(r,n,a)=
+		if odd(n)= 1 then
+		if (cmp(n,one)=1) then r+a
+		else mult_acc3(r+a,n2,a2)
+		else mult_acc3(r,n2,a2)
+	end schema
+
+	schema Multiply	
+		intZ : Z;	
+		multiply3 : intZ & intZ fun intZ;
+	where
+		forall n, a : intZ @
+		multiply3(n,a) = if(not odd(n)=1) then
+		multiply3(half(n),a+a)
+		else if (cmp(n,one)=1)then a
+		else mult_acc3(a, half(diff(n,one)),a+a)
+	end schema
+
+	end spec
